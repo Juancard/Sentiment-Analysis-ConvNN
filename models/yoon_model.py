@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from keras.layers import Convolution1D, MaxPooling1D, Flatten, Dropout, Input, Dense
 from keras.layers.embeddings import Embedding
@@ -59,9 +60,9 @@ class TextCNN(object):
             self.convolutional_layers.append(conv)
             self.maxpooling_layers.append(maxPooling)
         # Merge outputs of each conv-maxpooling layer
-        merged = concatenate(self.maxpooling_layers, name="concatenation")
+        self.merge = concatenate(self.maxpooling_layers, name="concatenation")
         # Flatten output
-        self.flat = Flatten(name="flatten_layer")(merged)
+        self.flat = Flatten(name="flatten_layer")(self.merge)
         # Dropout layer
         # to prevent overfitting
         self.drop = Dropout(dropout, name="dropout_%.2f" % dropout)(self.flat)

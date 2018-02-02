@@ -56,7 +56,7 @@ def main(args):
 		FILTER_SIZES,
 		DROPOUT)
 	model = textCnn.model
-	model.compile(loss=LOSS_FUNCTION, optimizer='adam', metrics=['accuracy'])
+	model.compile(loss=LOSS_FUNCTION, optimizer=OPTIMIZER, metrics=['accuracy'])
 	#textCnn.plot_model('plots/yoon_architecture_binary_output')
 	logging.info("Loading collection")
 	(x_train, y_train), (x_test, y_test) = imdb.load_data(
