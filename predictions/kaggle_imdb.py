@@ -16,9 +16,8 @@ from keras.preprocessing.text import text_to_word_sequence
 from keras.preprocessing import sequence
 
 
-# Dependencias de módulos creados por mi para otros proyectos:
-sys.path.insert(0, os.path.abspath("../models"))
-from yoon_model import TextCNN
+
+from models.yoon_model import TextCNN
 
 def loadArgParser():
     parser = argparse.ArgumentParser(description='A script to make predictions with the loaded models')
