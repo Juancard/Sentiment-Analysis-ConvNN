@@ -1,3 +1,0 @@
-[section]
-test_data_filepath=/path/to/testData.tsv
-model_filepath=/path/to/model.h5

@@ -3,6 +3,7 @@ import sys
 import os
 import logging
 import argparse
+import configparser 
 import time
 import numpy as np
 time_format="%Y%m%d_%H%M%S"
@@ -13,55 +14,27 @@ seed = 7
 np.random.seed(seed)
 
 # Dependencias de módulos creados por mi para otros proyectos:
-sys.path.insert(0, os.path.abspath("models"))
-from yoon_model import TextCNN
+from models.yoon_model import TextCNN
 from keras.datasets import imdb
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.preprocessing import sequence
 
-COLLECTION_PATH="imdb.npz"
-VOCABULARY_SIZE = 10000
-SENTENCE_LENGTH = 1600
-EMBEDDING_LENGTH = 128
-FILTERS = 128
-FILTER_SIZES = [3, 4, 5]
-EPOCHS = 2
-BATCH_SIZE = 16
-DROPOUT = 0.5
-LOSS_FUNCTION='binary_crossentropy'
-OPTIMIZER='adam'
-
-
-def main(args):
-	logging.info("Starting script")
-	logging.info(
-		"Parameters: [COLLECTION_PATH=%s,VOCABULARY_SIZE=%d, SENTENCE_LENGTH=%d, EMBEDDING_LENGTH=%d,FILTERS=%d,FILTER_SIZES=%s,EPOCHS=%d,BATCH_SIZE=%d,DROPOUT=%.2f,LOSS=%s,OPTIMIZER=%s]"
-		% (COLLECTION_PATH,
-		VOCABULARY_SIZE,
-		SENTENCE_LENGTH,
-		EMBEDDING_LENGTH,
-		FILTERS,
-		str(FILTER_SIZES),
-		EPOCHS,
-		BATCH_SIZE,
-		DROPOUT,
-		LOSS_FUNCTION,
-		OPTIMIZER)
-	)
+def main(config):
+	logging.info("Hyperparameters: " + str(config))
 	logging.info("Generating network")
-	textCnn = TextCNN(SENTENCE_LENGTH,
-		EMBEDDING_LENGTH,
-		VOCABULARY_SIZE,
-		FILTERS,
-		FILTER_SIZES,
-		DROPOUT)
+	textCnn = TextCNN(config['sentence_length'],
+		config['embed_length'],
+		config['vocab_size'],
+		config['filters'],
+		config['filter_sizes'],
+		config['dropout_prop'])
 	model = textCnn.model
-	model.compile(loss=LOSS_FUNCTION, optimizer=OPTIMIZER, metrics=['accuracy'])
+	model.compile(loss=config['loss_func'], optimizer=config['optimizer'], metrics=['accuracy'])
 	#textCnn.plot_model('plots/yoon_architecture_binary_output')
 	logging.info("Loading collection")
 	(x_train, y_train), (x_test, y_test) = imdb.load_data(
-		path=COLLECTION_PATH,
-		num_words=VOCABULARY_SIZE,
+		path=config["coll_path"],
+		num_words=config["vocab_size"],
 		skip_top=0,
 		maxlen=None,
 		seed=113,
@@ -77,44 +50,59 @@ def main(args):
 		))
 
 	logging.info("Encoding training and test sets")
-	x_train = sequence.pad_sequences(x_train, maxlen=SENTENCE_LENGTH)
-	x_test = sequence.pad_sequences(x_test, maxlen=SENTENCE_LENGTH)
+	x_train = sequence.pad_sequences(x_train, maxlen=config['sentence_length'])
+	x_test = sequence.pad_sequences(x_test, maxlen=config['sentence_length'])
 
 	# checkpoint
-	filepath = "keras_models/" + time.strftime(time_format) + "_" + "{epoch:02d}_{val_acc:.4f}.hdf5"
+	filepath = os.path.join(config['output_path'], time.strftime(time_format) + "_" + "{epoch:02d}_{val_acc:.4f}.hdf5")
 	checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
 	# logs during training
 	callback1 = MyCallback()
 	callbacks_list = [checkpoint, callback1]
 
-	model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=callbacks_list, verbose=0)
-	model_filepath = "keras_models/" + time.strftime(time_format) + "_" + "%depochs_%dbatchsize_%dembeddings_%dfilters_" % (EPOCHS, BATCH_SIZE, EMBEDDING_LENGTH, FILTERS) + "_".join(str(ks) for ks in FILTER_SIZES) + "filtersize" + ".h5"
+	print "Training model"
+	model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=config['epochs'], batch_size=config['batch_size'], callbacks=callbacks_list, verbose=0)
+	model_filepath = os.path.join(
+		config['output_path'], 
+		time.strftime(time_format) + "_" + "%depochs_%dbatchsize_%dembeddings_%dfilters_" % (config['epochs'], config['batch_size'], config['embed_length'], config['filters']) + "_".join(str(ks) for ks in config['filter_sizes']) + "filtersize" + ".h5")
 	model.save(model_filepath)
-
-
+	print "Model saved as: " + model_filepath
 
 def loadArgParser():
 	"""
 	To handle flags used to run this script on console
 	"""
 	parser = argparse.ArgumentParser(description='A script to classify imdb collection using convolutional neural networks')
+	parser.add_argument('config', nargs='+', help='.ini file with configuration data')
 	return parser.parse_args()
 
 def setLogger():
 	"""
-	To print logs both in console and in logs file
+	To print logs
 	"""
 	logging.basicConfig(level=logging.DEBUG)
 	logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-	rootLogger = logging.getLogger()
-
-	fileHandler = logging.FileHandler("{0}/{1}.log".format("logs", "logs"))
-	fileHandler.setFormatter(logFormatter)
-	rootLogger.addHandler(fileHandler)
-
-	consoleHandler = logging.StreamHandler()
-	consoleHandler.setFormatter(logFormatter)
-	rootLogger.addHandler(consoleHandler)
+def loadConfigData(iniFilePath):
+	"""
+	to load configuration data from .ini file
+	"""
+	config = configparser.ConfigParser()
+	config.read(args.config)
+	config = {
+		'coll_path': config['COLLECTION']['PATH'],
+		'vocab_size': int(config['MODEL']['VOCABULARY_SIZE']),
+		'sentence_length': int(config['MODEL']['SENTENCE_LENGTH']),
+		'embed_length': int(config['MODEL']['EMBEDDING_LENGTH']),
+		'filters': int(config['MODEL']['FILTERS']),
+		'filter_sizes': [int(fs) for fs in config['MODEL']['FILTER_SIZES'].split(',')],
+		'epochs': int(config['FITTING']['EPOCHS']),
+		'batch_size': int(config['FITTING']['BATCH_SIZE']),
+		'dropout_prop': float(config['MODEL']['DROPOUT']),
+		'loss_func': config['MODEL']['LOSS_FUNCTION'],
+		'optimizer': config['MODEL']['OPTIMIZER'],
+		'output_path': config['OUTPUT']['PATH']
+	}
+	return config
 
 class MyCallback(Callback):
 	def on_train_begin(self, logs={}):
@@ -125,6 +113,9 @@ class MyCallback(Callback):
 		return
 
 if __name__ == "__main__":
-	args = loadArgParser() # not used yet
-	setLogger()
-	main(args)
+	args = loadArgParser()
+        setLogger()
+	logging.info("Starting script")
+	logging.info("Loading configuration file")
+	config = loadConfigData(args)
+	main(config)
