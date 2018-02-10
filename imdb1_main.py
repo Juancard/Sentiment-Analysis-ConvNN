@@ -65,7 +65,7 @@ def main(config):
 		config['dropout_prop'],
 		embedding_pretrain = config['embed_pretrained'] == 1,
 		embedding_weights = embedding_weights,
-		embedding_train = config['embed_train']
+		embedding_train = config['embed_train'] == 1
 	)
 
 	model = textCnn.model
