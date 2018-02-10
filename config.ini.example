@@ -2,14 +2,23 @@
 PATH = imdb.npz
 
 [MODEL]
-VOCABULARY_SIZE = 10000
 SENTENCE_LENGTH = 1600
-EMBEDDING_LENGTH = 128
 FILTERS = 128
 FILTER_SIZES = 3, 4, 5
 DROPOUT = 0.5
 LOSS_FUNCTION = binary_crossentropy
 OPTIMIZER = adam
+
+[EMBEDDING]
+VOCABULARY_SIZE = 10000
+VECTOR_LENGTH = 128
+# if embedding layer is initialized with pretrained embedding.
+# values: 0 (no pretraining) or 1 (pretrained).
+PRETRAINED = 0
+# if pretrained, set path in which to locate pretrained embeddings
+PRETRAINED_PATH = /path/to/pretrained/embeddings
+# if embeddings are trained (1) or not (0)
+TRAIN = 1
 
 [FITTING]
 EPOCHS = 2

@@ -26,20 +26,38 @@ class TextCNN(object):
         vocabulary_size,
         filters,
         filter_sizes,
-        dropout
+        dropout,
+        embedding_pretrain=False,
+        embedding_weights=False,
+        embedding_train=True
         ):
         # Input layer
         # Receives the sentence
         self.input_layer = Input(
             shape=(sentence_length,),
             dtype='int32', name='sentence')
+
         # Embedding layer
         # each word on setence with its corresponding embedding vector.
-        self.embedding = Embedding(
-            vocabulary_size,
-            embedding_length,
-            input_length=sentence_length,
-            name="embedding")(self.input_layer)
+        if embedding_pretrain:
+            # create the embedding layer with pre trained embeddings
+            self.embedding = Embedding(
+                vocabulary_size,
+                embedding_length,
+                weights=[embedding_weights],
+                input_length=sentence_length,
+                name="embedding",
+                trainable=embedding_train
+            )(self.input_layer)
+        else:
+            self.embedding = Embedding(
+                vocabulary_size,
+                embedding_length,
+                input_length=sentence_length,
+                name="embedding",
+                trainable=embedding_train
+            )(self.input_layer)
+
         # COnvolutional layers
         # One for each filter size
         # Each conv. layer with a max pooling
