@@ -29,7 +29,8 @@ class TextCNN(object):
         dropout,
         embedding_pretrain=False,
         embedding_weights=False,
-        embedding_train=True
+        embedding_train=True,
+	classes=2
         ):
         # Input layer
         # Receives the sentence
@@ -86,8 +87,11 @@ class TextCNN(object):
         self.drop = Dropout(dropout, name="dropout_%.2f" % dropout)(self.flat)
         # Output layer
         # Final binary classification
-        self.output = Dense(1, activation='sigmoid')(self.drop)
-        self.model = Model(inputs=self.input_layer, outputs=self.output, name="binary_output")
+	if classes == 2:
+        	self.output = Dense(1, activation='sigmoid')(self.drop)
+        else:
+		self.output = Dense(classes, activation='softmax')(self.drop)
+	self.model = Model(inputs=self.input_layer, outputs=self.output, name="binary_output")
 
     def plot_model(self, filepath):
         plot_model(self.model, show_shapes=True, to_file=filepath)
