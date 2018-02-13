@@ -6,6 +6,6 @@ setup(name = "Sentiment-Analysis-ConvNN",
     author = "Juan Cardona",
     author_email = "juancruzcardona@gmail.com",
     url = "",
-    packages = ['models'],
-    scripts = ["imdb1_main.py"]
+    packages = ['packages'],
+    scripts = ["imdb1_main.py", "airline_tweets_main.py"]
 ) 
