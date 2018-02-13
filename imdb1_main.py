@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-import logging
 import argparse
-import configparser
 import time
 import numpy as np
 
@@ -82,13 +80,13 @@ def main(config):
 	checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
 	callbacks_list = [checkpoint]
 
-	print "Training model"
+	logging.info("Training model")
 	model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=config['epochs'], batch_size=config['batch_size'], callbacks=callbacks_list, verbose=2)
 	model_filepath = os.path.join(
 		config['output_path'],
 		time.strftime(time_format) + "_" + "%depochs_%dbatchsize_%dembeddings_%dfilters_" % (config['epochs'], config['batch_size'], config['embed_length'], config['filters']) + "_".join(str(ks) for ks in config['filter_sizes']) + "filtersize" + ".h5")
 	model.save(model_filepath)
-	print "Model saved as: " + model_filepath
+	logging.info("Model saved as: " + model_filepath)
 
 def loadArgParser():
 	"""
@@ -100,7 +98,7 @@ def loadArgParser():
 
 if __name__ == "__main__":
 	args = loadArgParser()
-        common.setLogger()
+        logging = common.setLogger()
 	logging.info("Starting script")
 	logging.info("Loading configuration file")
 	config = common.loadConfigData(args.config)

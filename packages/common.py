@@ -8,6 +8,7 @@ def setLogger():
 	"""
 	logging.basicConfig(level=logging.DEBUG)
 	logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+	return logging
 def loadConfigData(iniFilePath):
 	"""
 	to load configuration data from .ini file
@@ -16,8 +17,8 @@ def loadConfigData(iniFilePath):
 	config.read(iniFilePath)
 	config = {
 		'coll_path': config['COLLECTION']['PATH'],
-		'sentence_length': int(config['MODEL']['SENTENCE_LENGTH']),
-		'vocab_size': int(config['EMBEDDING']['VOCABULARY_SIZE']),
+		'sentence_length': int(config['MODEL']['SENTENCE_LENGTH']) if 'SENTENCE_LENGTH' in config['MODEL'] else None,
+		'vocab_size': int(config['EMBEDDING']['VOCABULARY_SIZE']) if 'VOCABULARY_SIZE' in config['EMBEDDING'] else None,
 		'embed_length': int(config['EMBEDDING']['VECTOR_LENGTH']),
 		'embed_pretrained': int(config['EMBEDDING']['PRETRAINED']),
 		'embed_pretrained_path': config['EMBEDDING']['PRETRAINED_PATH'],
