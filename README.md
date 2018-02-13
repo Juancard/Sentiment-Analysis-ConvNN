@@ -3,18 +3,30 @@ Sentiment analysis using a convolutional neural network
 
 ## Installation
 1) Clone repo
+```bash
 git clone https://github.com/Juancard/Sentiment-Analysis-ConvNN.git
-
+```
 2) Install dependencies
+```bash
 pip install -r requirements.txt
-
+```
 3) Install modules of this app
+```bash
 python setup.py install
-
+```
 4) Rename `config.ini.example` to `config.ini`
-In linux: cp config.ini.example config.ini
-
+In linux: 
+```bash
+cp config.ini.example config.ini
+```
 ## Run
 1) Modify `config.ini` with your preferred hyperparameters (don't forget setting Output path parameter of this file)
 2) Execute:
+```bash
 python imdb1_main.py config.ini
+```
+or
+```bash
+python airway_tweets_main.py config.ini
+```
+
