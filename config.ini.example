@@ -2,14 +2,20 @@
 PATH = imdb.npz
 
 [MODEL]
+# Length of sentence, remove parameter if using full sentence length
 SENTENCE_LENGTH = 1600
 FILTERS = 128
 FILTER_SIZES = 3, 4, 5
 DROPOUT = 0.5
+# Loss function
+# use binary_crossentropy if classifying two classes (like in imdb dataset),
+# else (like in airline_tweets dataset) you can use categorical_crossentropy or
+# any other you like (see keras docs on the matter)
 LOSS_FUNCTION = binary_crossentropy
 OPTIMIZER = adam
 
 [EMBEDDING]
+# Size of vocabulary, remove parameter if using full vocabulary
 VOCABULARY_SIZE = 10000
 VECTOR_LENGTH = 128
 # if embedding layer is initialized with pretrained embedding.
