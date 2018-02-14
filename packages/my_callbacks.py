@@ -1,5 +1,5 @@
 from keras.callbacks import Callback
-from sklearn.metrics import roc_auc_score, confusion_matrix, precision_recall_fscore_support
+from sklearn.metrics import roc_auc_score, roc_curve, auc, confusion_matrix, precision_recall_fscore_support
 from tabulate import tabulate
 
 import numpy as np
@@ -33,9 +33,25 @@ class IntervalEvaluation(Callback):
             self.precisionRecallFScoreSupport(y_pred)
 
     def rocScore(self, y_pred):
-        roc_score = roc_auc_score(self.y_val, y_pred)
-        self.roc_scores.append(roc_score)
-        print "Roc score: %.4f" % roc_score
+        #roc_score = roc_auc_score(self.y_val, y_pred)
+        #self.roc_scores.append(roc_score)
+        #print "Roc score: %.4f" % roc_score
+        # Compute ROC curve and ROC area for each class
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        for i in range(len(self.y_classes)):
+            fpr[i], tpr[i], _ = roc_curve(self.y_val[:, i], y_pred[:, i])
+            roc_auc[i] = auc(fpr[i], tpr[i])
+        print tabulate(
+                [
+                    [self.y_classes[0], roc_auc[0]],
+                    [self.y_classes[1], roc_auc[1]],
+                    [self.y_classes[2], roc_auc[2]]
+                ],
+                headers=["class", "roc_curve"],
+                tablefmt="psql"
+        )
 
     def confusionMatrix(self, y_pred):
         cm = confusion_matrix(
