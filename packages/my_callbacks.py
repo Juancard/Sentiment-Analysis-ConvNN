@@ -1,5 +1,7 @@
 from keras.callbacks import Callback
-from sklearn.metrics import roc_auc_score, confusion_matrix
+from sklearn.metrics import roc_auc_score, confusion_matrix, precision_recall_fscore_support
+from tabulate import tabulate
+
 import numpy as np
 import pandas as pd
 """
@@ -15,7 +17,6 @@ class IntervalEvaluation(Callback):
             self.X_val = self.X_val.as_matrix()
         if isinstance(self.y_val, pd.DataFrame):
             self.y_classes = list(self.y_val.columns.values)
-            print self.y_classes
             self.y_val = self.y_val.as_matrix()
 
     def on_train_begin(self, logs={}):
@@ -27,24 +28,50 @@ class IntervalEvaluation(Callback):
         self.losses.append(logs.get("loss"))
         if epoch % self.interval == 0:
             y_pred = self.model.predict(self.X_val, verbose=0)
-            roc_score = roc_auc_score(self.y_val, y_pred)
-            self.roc_scores.append(roc_score)
-            print "Roc score: %.4f" % roc_score
-            cm = confusion_matrix(
-                self.y_val.argmax(axis=1),
-                y_pred.argmax(axis=1)
+            self.rocScore(y_pred)
+            self.confusionMatrix(y_pred)
+            self.precisionRecallFScoreSupport(y_pred)
+
+    def rocScore(self, y_pred):
+        roc_score = roc_auc_score(self.y_val, y_pred)
+        self.roc_scores.append(roc_score)
+        print "Roc score: %.4f" % roc_score
+
+    def confusionMatrix(self, y_pred):
+        cm = confusion_matrix(
+            self.y_val.argmax(axis=1),
+            y_pred.argmax(axis=1)
+        )
+        self.conf_matrices.append(cm)
+        print "Confusion Matrix: "
+        if self.y_classes:
+            print_cm(cm, self.y_classes, decimals=0)
+        else:
+            print cm
+        print "Confusion Matrix - Normalized: "
+        if self.y_classes:
+            print_cm(cm.astype(float)/cm.sum(axis=1)[:, None], self.y_classes, decimals=3)
+        else:
+            print cm.astype(float)/cm.sum(axis=1)[:, None]
+
+    def precisionRecallFScoreSupport(self, y_pred):
+        predicted = [1,2,3,4,5,1,2,1,1,4,5]
+        y_test = [1,2,3,4,5,1,2,1,1,4,1]
+
+        precision, recall, fscore, support = precision_recall_fscore_support(
+            self.y_val.argmax(axis=1),
+            y_pred.argmax(axis=1)
+        )
+
+        print tabulate(
+                [
+                    [self.y_classes[0], precision[0], recall[0], fscore[0], support[0]],
+                    [self.y_classes[1], precision[1], recall[1], fscore[1], support[1]],
+                    [self.y_classes[2], precision[2], recall[2], fscore[2], support[2]]
+                ],
+                headers=["class", "precision", "recall", "fscore", "support"],
+                tablefmt="psql"
             )
-            self.conf_matrices.append(cm)
-            print "Confusion Matrix: "
-            if self.y_classes:
-                print_cm(cm, self.y_classes, decimals=0)
-            else:
-                print cm
-            print "Confusion Matrix - Normalized: "
-            if self.y_classes:
-                print_cm(cm.astype(float)/cm.sum(axis=1)[:, None], self.y_classes, decimals=3)
-            else:
-                print cm.astype(float)/cm.sum(axis=1)[:, None]
 
 """
 https://gist.github.com/zachguo/10296432
