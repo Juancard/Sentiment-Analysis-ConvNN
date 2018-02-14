@@ -15,7 +15,7 @@ np.random.seed(seed)
 # Dependencias de módulos creados por mi para otros proyectos:
 from packages.yoon_model import TextCNN
 from packages.glove_embeddings import loadGloveEmbeddings,filterGloveEmbeddings
-from packages import common
+from packages import common, my_callbacks
 from keras.datasets import imdb
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.preprocessing import sequence
@@ -23,7 +23,7 @@ from keras.preprocessing import sequence
 # Parameters for imdb dataset
 INDEX_FROM = 3
 
-def main(config):
+def main(config, logging):
 	logging.info("Hyperparameters: " + str(config))
 
 	logging.info("Loading collection")
@@ -78,7 +78,10 @@ def main(config):
 	# checkpoint
 	filepath = os.path.join(config['output_path'], time.strftime(time_format) + "_" + "{epoch:02d}_{val_acc:.4f}.hdf5")
 	checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-	callbacks_list = [checkpoint]
+
+	# callbacks
+	interval_evaluation = my_callbacks.IntervalEvaluation(validation_data=(X_test, y_test), interval=1)
+	callbacks_list = [checkpoint, interval_evaluation]
 
 	logging.info("Training model")
 	model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=config['epochs'], batch_size=config['batch_size'], callbacks=callbacks_list, verbose=2)
@@ -98,8 +101,8 @@ def loadArgParser():
 
 if __name__ == "__main__":
 	args = loadArgParser()
-        logging = common.setLogger()
+	logging = common.setLogger()
 	logging.info("Starting script")
 	logging.info("Loading configuration file")
 	config = common.loadConfigData(args.config)
-	main(config)
+	main(config, logging)

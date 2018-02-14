@@ -14,24 +14,24 @@ from keras.callbacks import ModelCheckpoint, Callback
 from keras.preprocessing.sequence import pad_sequences
 
 from packages.yoon_model import TextCNN
-from packages import preprocess_tweets_glove, common
+from packages import preprocess_tweets_glove, common, my_callbacks
 from packages.glove_embeddings import filterGloveEmbeddings, loadGloveEmbeddings
 
 # fix random seed for reproducibility
 seed = 7
 np.random.seed(seed)
 
-def main(config):
+def main(config, logging):
 	logging.info("Hyperparameters: " + str(config))
 
-	logging.info("Loading collection")	
+	logging.info("Loading collection")
 	airline_tw = pd.read_csv(config["coll_path"], header=0)
 	airline_tw = airline_tw[["text", "airline_sentiment"]]
 
 	logging.info("Preprocessing and cleaning")
 	airline_tw["text"] = airline_tw["text"].apply(preprocess_tweets_glove.tokenize)
 	airline_tw["text"] = airline_tw["text"].apply(preprocess_tweets_glove.clean_str)
-	#stop_words = set(stopwords.words('english')) 
+	#stop_words = set(stopwords.words('english'))
 	#airline_tw["text"] = airline_tw["text"].apply(lambda x:' '.join([w for w in x.split(' ') if not w in stop_words]))
 
 	X = airline_tw["text"]
@@ -95,7 +95,10 @@ def main(config):
 	# checkpoint
 	filepath = os.path.join(config['output_path'], time.strftime(time_format) + "_" + "{epoch:02d}_{val_acc:.4f}.hdf5")
 	checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-	callbacks_list = [checkpoint]
+
+	# callbacks
+	interval_evaluation = my_callbacks.IntervalEvaluation(validation_data=(X_test, y_test), interval=1)
+	callbacks_list = [checkpoint, interval_evaluation]
 
 	logging.info("Training model")
 	model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=config['epochs'], batch_size=config['batch_size'], callbacks=callbacks_list, verbose=2)
@@ -115,8 +118,8 @@ def loadArgParser():
 
 if __name__ == "__main__":
 	args = loadArgParser()
-        logging = common.setLogger()
+	logging = common.setLogger()
 	logging.info("Starting script")
 	logging.info("Loading configuration file")
 	config = common.loadConfigData(args.config)
-	main(config)
+	main(config, logging)
