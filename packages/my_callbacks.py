@@ -37,14 +37,19 @@ class IntervalEvaluation(Callback):
             self.conf_matrices.append(cm)
             print "Confusion Matrix: "
             if self.y_classes:
-                print_cm(cm, self.y_classes)
+                print_cm(cm, self.y_classes, decimals=0)
             else:
                 print cm
+            print "Confusion Matrix - Normalized: "
+            if self.y_classes:
+                print_cm(cm.astype(float)/cm.sum(axis=1)[:, None], self.y_classes, decimals=3)
+            else:
+                print cm.astype(float)/cm.sum(axis=1)[:, None]
 
 """
 https://gist.github.com/zachguo/10296432
 """
-def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
+def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None, decimals=1):
     """pretty print for confusion matrixes"""
     columnwidth = max([len(x) for x in labels]+[5]) # 5 is value length
     empty_cell = " " * columnwidth
@@ -57,7 +62,7 @@ def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=
     for i, label1 in enumerate(labels):
         print "    %{0}s".format(columnwidth) % label1,
         for j in range(len(labels)):
-            cell = "%{0}.1f".format(columnwidth) % cm[i, j]
+            cell = "%{0}.{1}f".format(columnwidth, decimals) % cm[i, j]
             if hide_zeroes:
                 cell = cell if float(cm[i, j]) != 0 else empty_cell
             if hide_diagonal:
