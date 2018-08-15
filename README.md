@@ -1,5 +1,6 @@
 # Sentiment-Analysis-ConvNN
 Sentiment analysis using a convolutional neural network
+Report [here][https://docs.google.com/document/d/1sqN9UpXz3R2tUOsjIvW0Mr5gwIoae_fBpGJTZpmrtGw/edit?usp=sharing]
 
 ## Installation
 1) Clone repo
